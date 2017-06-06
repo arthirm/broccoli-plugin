@@ -65,7 +65,7 @@ ReadCompat.prototype.setupFS = function (outputPaths) {
   });
   this.outTree = new FSTree({
     root: this.outputPath,
-    srcTree: !this.fsFacade,
+    srcTree: !this.pluginInterface.fsFacade,
   });
 
   this.pluginInterface.setup(null, {
