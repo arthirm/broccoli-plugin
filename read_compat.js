@@ -121,6 +121,7 @@ ReadCompat.prototype.read = function(readTree) {
       // save for next builds comparison
       self._priorBuildInputNodeOutputPaths = outputPaths;
 
+      console.log(`======== Building ${self.pluginInterface.name + (self.pluginInterface.annotation != null ? ' (' + self.pluginInterface.annotation + ')' : '')}`);
       self.inTree.map((fsTree, i) => fsTree.reread(outputPaths[i]));
       self.outTree.start();
       return RSVP.resolve(self.callbackObject.build()).finally(() => self.outTree.stop());
