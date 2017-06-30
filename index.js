@@ -78,9 +78,11 @@ Plugin.prototype.__broccoliGetInfo__ = function(builderFeatures) {
     delete nodeInfo.needsCache
   }
 
-  if (!this.builderFeatures.fsFacade) {
-    delete nodeInfo.fsFacade;
-  }
+  // if the builder does not support FSFacade then it should break. So the below lines should not be present.
+
+  // if (!this.builderFeatures.fsFacade) {
+  //   delete nodeInfo.fsFacade;
+  // }
 
   return nodeInfo
 }
