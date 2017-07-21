@@ -12,6 +12,7 @@ chai.use(chaiAsPromised)
 var multidepRequire = require('multidep')('test/multidep.json')
 var quickTemp = require('quick-temp')
 var symlinkOrCopy = require('symlink-or-copy');
+const FSMergeTree = require('fs-tree-diff/lib/fs-merge-tree');
 
 function copyFilesWithAnnotation(sourceDirId, sourceDir, destDir) {
   var files = fs.readdirSync(sourceDir)
@@ -241,19 +242,96 @@ describe('integration test', function(){
           })
       })
     })
+     
+    describe('fsFacade', function() {
+      it('srcTree is false when fsfacade is set ', function() {
+        var annotatingPlugin = new AnnotatingPlugin([node1, node2], {
+          name: 'Annotating Plugin',
+          annotation: 'Annotating Plugin Annotation',
+          fsFacade: true
+        })
 
-    describe.skip('fsFacade', function() {
-      it('sets up fstrees on first build', function() {
-        expect('this thing is tested').to.equal(true);
+        builder = new Builder_0_16(annotatingPlugin)
+        builder.build()
+        .then(function(hash) {
+            let plugin = hash.graph.tree;
+            expect(plugin.out._srcTree).to.be.false;
+        });
+      });
+
+      it('srcTree is true when fsfacade is not set ', function() {
+        var annotatingPlugin = new AnnotatingPlugin([node1, node2], {
+          name: 'Annotating Plugin',
+          annotation: 'Annotating Plugin Annotation',
+        })
+
+        builder = new Builder_0_16(annotatingPlugin)
+        builder.build()
+        .then(function(hash) {
+          let plugin = hash.graph.tree;
+          expect(plugin.out._srcTree).to.be.true;
+        });
+      });
+
+       it('sets up fstrees on first build', function() {
+        var annotatingPlugin = new AnnotatingPlugin([node1, node2], {
+          name: 'Annotating Plugin',
+          annotation: 'Annotating Plugin Annotation',
+        })
+
+        builder = new Builder_0_16(annotatingPlugin)
+        builder.build()
+        .then(function(hash) {
+          let plugin = hash.graph.tree;
+          expect(plugin.in).instanceOf(FSMergeTree);
+          expect(plugin.in.length).to.equal(2)
+        });
+      });
+
+
+      it('Checks the state of outTree during and after build', function() {
+        let treeState;
+        class StateTracker extends AnnotatingPlugin {
+          constructor(inputs, options) {
+            super(inputs, options);
+          } 
+          build() {
+            treeState = this.out._state;
+          }
+        } 
+
+        var stateTracker = new StateTracker([node1, node2], {
+          name: 'State Tracker Plugin',
+          annotation: 'State Tracker Annotation',
+          fsFacade: true
+        })
+
+        builder = new Builder_0_16(stateTracker)
+        builder.build()
+        .then(function(hash) {
+          let plugin = hash.graph.tree;
+          expect(treeState).to.equal('started');
+          expect(plugin.out._state).to.equal('stopped');
+        });
       });
 
       it('persists fstrees between builds', function() {
-        expect('this thing is tested').to.equal(true);
+        let inTree;
+        var annotatingPlugin = new AnnotatingPlugin([node1, node2], {
+          name: 'Annotating Plugin',
+          annotation: 'Annotating Plugin Annotation',
+          fsFacade: true
+        })
+        builder = new Builder_0_16(annotatingPlugin)
+        builder.build()
+        .then(function(hash) {
+          inTree = hash.graph.tree.in;
+          return builder.build()
+        }).then(function(hash) {
+          expect(hash.graph.tree.in).to.be.equal(inTree);
+        });
       });
 
-      it('rereads trees each build, notifying them of changed roots', function() {
-        expect('this thing is tested').to.equal(true);
-      });
     });
   })
 
